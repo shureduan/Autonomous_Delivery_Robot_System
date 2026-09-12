@@ -24,7 +24,7 @@ The project focuses on three connected parts of that problem:
 
 ## Multi-floor Topological Node System
 
-![Multi-floor semantic nodes and selected planning connections](figures/system_topology.png)
+![Multi-floor topology-node schematic from the project presentation](figures/system_topology.png)
 
 The topology bridges scene geometry and task-level optimization. Instead of scheduling directly over every occupancy-grid cell, the system represents locations with operational meaning:
 
@@ -34,7 +34,7 @@ The topology bridges scene geometry and task-level optimization. Instead of sche
 | Platform / Floor 1 | Two ramp-top nodes, delivery regions A/B, and elevator boarding point |
 | Upper level / Floor 2 | Elevator exit and delivery region C |
 
-The diagram highlights selected connections and is not drawn to spatial scale. Its purpose is to show how operational locations and vertical transitions are organized across the three levels.
+The presentation schematic organizes the unloading point, three delivery targets, ramp endpoints, and elevator point across stacked levels. It illustrates how operational locations and vertical transitions are represented; the visible links are schematic rather than a complete adjacency graph.
 
 **Edges carry both cost and executable geometry.** Fixed edges store three-dimensional waypoint sequences for known corridors and ramps. Theta* generates selected intra-floor connections on occupancy maps after obstacle inflation. Elevator transfer edges connect boarding and exit nodes.
 
@@ -47,6 +47,8 @@ A single robot makes repeated depot-return trips while carrying multiple goods. 
 CBC, accessed through OR-Tools, minimizes total travel distance. The project applies a construction-delivery formulation and connects its output to the navigation pipeline; CVRP and the solver are established methods. The optimized trips are expanded into ordered movement commands and timed waits for elevator use and unloading.
 
 ## Unity Simulation and Delivery Execution
+
+![Construction-site scene and delivery robot](figures/unity_scene_and_robot.png)
 
 The Unity simulation represents a three-level construction site with a ground depot, two ramps, an elevator, and three randomized delivery regions. Regions A and B are generated on the platform level with separation constraints, while region C is placed on the upper floor. This creates repeated delivery tasks with changing destinations and cross-floor route requirements.
 
@@ -65,6 +67,10 @@ The observation has 29 dimensions: 21 simulated LiDAR ranges plus goal, return-p
 *Source: `Jingxuan_Duan_Independent_Study_V2.pdf`, Figure 6, page 6. Results are summarized over successive 200k-step intervals in the 800k-step presentation.*
 
 Training success rises while collision and timeout rates decline, with performance reaching an approximate plateau after 400k steps. In the 600k–800k interval, the reported success rate is **93.7 ± 2.3%**. The step-reward curve and interval summaries show how the recovery policy develops across the training sequence.
+
+![Two representative PARS avoidance and route-rejoin trajectories](figures/pars_recovery_trajectories.png)
+
+The two representative trajectories show PARS steering around local obstacles and returning to the dashed reference route at a locked rejoin point. They visualize the recovery-and-reconnection behavior used alongside nominal Pure Pursuit tracking.
 
 ## Representative Planning Output
 
