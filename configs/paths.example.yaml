@@ -1,0 +1,10 @@
+# Repository-relative path conventions for the curated public version.
+paths:
+  scene_nodes: data/examples/scene_nodes.csv
+  edge_definitions: data/examples/edge_definition.csv
+  fixed_routes: data/examples/fixed_routes.json
+  edge_cache: data/processed/edge_cache_merged_all.json
+  task_input: data/examples/task_input.xlsx
+  outputs: outputs
+
+# Approved example data are not included in Phase 1.

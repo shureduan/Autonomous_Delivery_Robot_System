@@ -1,0 +1,93 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*credentials*
+*secrets*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+.venv/
+.venv-*/
+env/
+ENV/
+.conda/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Machine learning models and logs
+*.pth
+*.pt
+*.ckpt
+*.onnx
+checkpoints/
+models/
+runs/
+logs/
+wandb/
+mlruns/
+events.out.tfevents.*
+
+# Generated data and experiment outputs
+data/raw/
+data/private/
+outputs/
+artifacts/
+cache/
+.cache/
+*.tmp
+*.temp
+
+# Local release-review material and rights-pending media
+/PHASE4_CODE_RELEASE_REVIEW.md
+/docs/internal/
+/docs/*AUDIT*.md
+/figures/robot_platform.png
+/figures/unity_multifloor_scene.png
+
+# Unity generated directories and packages
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+MemoryCaptures/
+Recordings/
+*.csproj
+*.sln
+*.unitypackage
+
+# Editors and operating systems
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.claude/
+*.swp
+*.swo
+
+# LaTeX generated files
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
