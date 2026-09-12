@@ -57,6 +57,7 @@ cache/
 /docs/internal/
 /docs/*AUDIT*.md
 /figures/robot_platform.png
+/figures/unity_simulation.png
 /figures/unity_multifloor_scene.png
 
 # Unity generated directories and packages

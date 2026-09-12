@@ -1,99 +1,90 @@
 # Autonomous Delivery Robot System
 
-*Independent research on multi-floor autonomous material delivery for construction-site logistics.*
+*Research project on multi-floor autonomous material delivery for construction-site logistics.*
 
-The project combines a Unity-based multi-floor delivery pipeline with a separate Python research implementation of PARS for local recovery. The available source documents both components, but does not establish a live SAC-to-Unity control bridge.
+**Multi-floor topology · Unity simulation · Delivery optimization · RL-based local recovery**
 
-The Unity component covers sensing, topology and target export, generated-path loading, Rigidbody-based Pure Pursuit, elevator motion, and delivery dwell logic. The supporting Python pipeline covers mapping, topology processing, Theta* planning, CVRP scheduling, and waypoint generation. Separately, the Python PARS environment implements blocked-path recovery, PP/PARS switching, and a locked path-rejoin target. Source presence documents these implementations and interfaces; it is not evidence that the full combined runtime was tested.
+This study implements a Unity-based autonomous delivery framework for construction-material transport across multiple floors. The system integrates LiDAR mapping, semantic topology, Theta* planning, capacity-constrained delivery scheduling, waypoint generation, and robot execution, alongside a Python study of reinforcement-learning-based local path recovery.
 
-## Research Problem
+![System architecture: Unity delivery pipeline and a separate Python PARS study](figures/system_pipeline.png)
 
-Construction delivery combines several decisions that are often studied separately. A robot has limited carrying capacity, may need several depot-return trips, must transport multiple material types, and must reach delivery regions connected by ramps or an elevator. During execution, workers, equipment, or stored materials may also block a planned segment. The research question is how to represent these constraints across task scheduling and cross-floor execution while studying local route recovery without replacing the global plan.
+**System flow:** Theta* paths → merged topology → Dijkstra task distances → CVRP scheduling → waypoint expansion → Unity execution.
 
-## Key Contributions
+The architecture combines a Unity-based multi-floor delivery pipeline with a Python PARS study of local path recovery. Together, they connect task-level logistics, geometric planning, robot execution, and learned recovery within one research agenda.
 
-1. **Multi-trip multi-commodity CVRP formulation.** The task scheduler models one robot making repeated trips from a depot while carrying several material types. Trip-indexed route, activity, unloading, and commodity-flow variables couple each customer visit to loading, capacity, demand fulfillment, and depot return.
+## System Components
 
-2. **Hierarchical multi-floor planning and execution architecture.** Per-floor occupancy maps and a sparse topology connect the depot, delivery regions, ramps, and elevator transfer points. Task routes are expanded through cached graph edges into a continuous waypoint stream that Unity can execute, including cross-floor transitions and dwell events.
+Construction delivery requires more than finding a short path. A robot must transport different material types within its capacity, return to a depot for reloading, reach work areas on different floors, and convert delivery decisions into executable motion. A local obstruction also raises a separate control question: how can the robot recover toward its reference route without replacing the entire planning stack?
 
-3. **Python PARS local-recovery implementation.** The separate research environment implements nominal Pure Pursuit, geometric blockage detection, SAC velocity actions, PP/PARS switching, a locked forward rejoin target, and return to nominal tracking. This is a retained implementation rather than only a proposed idea, but the reviewed source does not establish its live takeover of the Unity controller.
+The project focuses on three connected parts of that problem:
 
-## System Architecture
+- **Multi-floor representation:** a typed node-edge graph connects delivery regions, ramp endpoints, elevator points, and the depot, while retaining the geometry needed for execution.
+- **Delivery formulation and execution:** a multi-trip, multi-commodity mixed-integer model connects loading and unloading decisions to route selection; its output becomes movement and dwell commands for Unity.
+- **Local recovery control:** the Python PARS module combines nominal Pure Pursuit, blockage-triggered SAC actions, and a locked forward rejoin target.
 
-![Multi-floor system topology](figures/system_topology.png)
+## Multi-floor Topological Node System
 
-The released source documents two related scopes:
+![Multi-floor semantic nodes and selected planning connections](figures/system_topology.png)
 
-```text
-Unity sensing and scene export
-        ↓
-Python mapping → topology → Theta* → distance table → CVRP → waypoints
-        ↓
-Unity route loading → Pure Pursuit → elevator and delivery waits
-```
+The topology bridges scene geometry and task-level optimization. Instead of scheduling directly over every occupancy-grid cell, the system represents locations with operational meaning:
 
-```text
-Occupancy map + reference route + locally supplied SAC policy
-        ↓
-Python PARS environment: nominal PP ↔ blocked-path recovery → locked rejoin
-```
+| Level | Nodes and roles |
+|---|---|
+| Ground / Floor 0 | Depot and two ramp-bottom nodes |
+| Platform / Floor 1 | Two ramp-top nodes, delivery regions A/B, and elevator boarding point |
+| Upper level / Floor 2 | Elevator exit and delivery region C |
 
-Simulated multi-height LiDAR supports separate occupancy representations for vertically disconnected spaces. Semantic nodes identify locations that affect delivery execution, while graph edges preserve both traversal cost and waypoint geometry. Theta* supplies collision-aware any-angle paths for appropriate same-floor connections; fixed routes represent surveyed segments such as ramps; transfer edges represent elevator movement. The resulting graph distances inform the delivery optimizer, and the selected task order is expanded back into executable geometric paths.
+The diagram highlights selected connections and is not drawn to spatial scale. Its purpose is to show how operational locations and vertical transitions are organized across the three levels.
 
-The Unity and planning components exchange LiDAR, scene-node, and waypoint data through retained UDP and file interfaces. The Python PARS module uses compatible map and route concepts, but the reviewed material does not establish a runtime SAC command channel back to Unity. This boundary does not determine whether such a bridge existed elsewhere historically.
+**Edges carry both cost and executable geometry.** Fixed edges store three-dimensional waypoint sequences for known corridors and ramps. Theta* generates selected intra-floor connections on occupancy maps after obstacle inflation. Elevator transfer edges connect boarding and exit nodes.
 
-Theta*, graph shortest-path search, Pure Pursuit, Soft Actor-Critic, CBC/OR-Tools, Gymnasium, and LiDAR mapping concepts are established methods. The project contribution is their application-specific formulation, retained interfaces, and component-level integration for the studied construction-delivery setting.
+Dijkstra search over the merged edge cache produces task-to-task distances. After scheduling, the chosen task sequence is expanded through that same cache into physical waypoint paths. This translation—from semantic tasks to geometric routes—is the central role of the topology system.
 
-## Method
+## Task-level Delivery Optimization
 
-### Task-level optimization
+A single robot makes repeated depot-return trips while carrying multiple goods. The mixed-integer formulation includes trip-indexed route and activity variables, explicit customer unloading quantities, commodity flows, demand fulfillment, capacity constraints, and subtour elimination. These constraints tie the delivery quantities to the routes used to transport them.
 
-The delivery problem is formulated as a mixed-integer, multi-trip, multi-commodity capacitated vehicle routing problem. The objective minimizes route cost subject to trip activation, depot departure and return, customer visitation, vehicle capacity, commodity-specific demand satisfaction, and route-consistent material flow. Explicit unloading variables connect delivered quantities to customer visits, and subtour-elimination constraints preserve valid trips. The implementation uses CBC through OR-Tools.
+CBC, accessed through OR-Tools, minimizes total travel distance. The project applies a construction-delivery formulation and connects its output to the navigation pipeline; CVRP and the solver are established methods. The optimized trips are expanded into ordered movement commands and timed waits for elevator use and unloading.
 
-### Multi-floor route planning
+## Unity Simulation and Delivery Execution
 
-The environment is divided into floor-specific occupancy maps so that geometry at different heights does not overlap in a single 2-D planning space. A semantic topology links delivery nodes and transition points. Theta* plans selected intra-floor edges after occupancy thresholding and obstacle inflation, and shortest-path search over the combined topology produces task-to-task distances. Once the CVRP solver chooses trip sequences, cached edge paths are concatenated into route waypoints with elevator and delivery waits.
+The Unity simulation represents a three-level construction site with a ground depot, two ramps, an elevator, and three randomized delivery regions. Regions A and B are generated on the platform level with separation constraints, while region C is placed on the upper floor. This creates repeated delivery tasks with changing destinations and cross-floor route requirements.
 
-### Local recovery
+Unity serves as the execution environment for the planned trips. The C# modules provide multi-height planar LiDAR, UDP sensor transmission, topology and target export, waypoint loading, and Rigidbody-based Pure Pursuit control. Critical-waypoint handling guides the robot into elevator boarding positions; trigger logic coordinates platform motion and exit; tagged wait commands represent elevator operation and unloading dwell time. Ramp segments retain three-dimensional waypoint geometry, allowing Pure Pursuit to execute changes in elevation as part of the route.
 
-PARS is implemented as a local recovery layer in the separate Python research environment rather than as a replacement for the global planner. Its observation combines local LiDAR ranges with path-relative goal, return-point, tracking-error, heading, and velocity information. The continuous action specifies linear and angular velocity. A geometric switching rule activates recovery when the nominal path is blocked; once reconnection becomes feasible, the return point is locked to avoid target drift and nominal tracking resumes. Archived materials contain several experiment versions, and this release does not select one as canonical.
+Python supplies the complementary planning stages: occupancy mapping, topology processing, Theta* paths, graph distances, CVRP scheduling, and waypoint generation. The final flat waypoint stream returns to Unity as an ordered sequence of motion and dwell commands. In the manuscript evaluation, five runs of 20 deliveries produced 100/100 completed deliveries and a mean round-trip time of 223 seconds.
 
-## Simulation
+## Reinforcement Learning for Local Recovery: PARS
 
-The manuscript describes a three-level Unity construction environment with a ground-level depot, two ramps, an elevator, and delivery regions on the upper levels. Delivery regions are randomized within their designated areas. A simulated wheeled robot uses multi-height 2-D LiDAR measurements for mapping and local perception. The simulation is intended to study the interfaces among logistics optimization, cross-floor route execution, and obstacle recovery before physical deployment.
+**PARS — Path-Attentive Recovery SAC — studies recovery around a supplied reference route in a Python simulation.** Pure Pursuit provides nominal tracking. When a geometric line-of-sight check detects a blocked forward reference, SAC supplies local linear and angular velocity commands. When reconnection becomes feasible, a forward rejoin target is locked before nominal tracking resumes.
 
-## Representative Outputs
+The observation has 29 dimensions: 21 simulated LiDAR ranges plus goal, return-point, tracking-error, heading, and velocity features. The research focus is the switching and rejoin design around established control and RL methods, rather than replacing the global planner with SAC.
 
-![Representative Theta-star path-planning output](figures/theta_star_path.png)
+![Archived PARS outcome curves and per-interval summaries from manuscript Figure 6](figures/pars_training_results.png)
 
-The figure above is a representative Theta* planning output on an occupancy map. It shows an any-angle route between topology nodes after map processing and obstacle inflation; it is a qualitative example rather than an aggregate performance result.
+*Source: `Jingxuan_Duan_Independent_Study_V2.pdf`, Figure 6, page 6. Results are summarized over successive 200k-step intervals in the 800k-step presentation.*
 
-The Unity summary table in the study manuscript records five evaluation runs with 20 randomized deliveries per run, for 100/100 completed deliveries and a mean round-trip time of 223 s. These manuscript aggregates are not evidence that PARS controlled Unity. Per-delivery records have not been located in the materials reviewed for this release, so the values are not presented as a fully reproducible benchmark.
+Training success rises while collision and timeout rates decline, with performance reaching an approximate plateau after 400k steps. In the 600k–800k interval, the reported success rate is **93.7 ± 2.3%**. The step-reward curve and interval summaries show how the recovery policy develops across the training sequence.
+
+## Representative Planning Output
+
+![Theta-star path from Platform_Ramp2_Top to Region_A_Floor1](figures/theta_star_path.png)
+
+This project-generated example shows a Theta* path from `Platform_Ramp2_Top` to `Region_A_Floor1`, with original and snapped endpoints. It illustrates how occupancy thresholding, obstacle inflation, endpoint snapping, and any-angle search produce the sparse waypoint geometry stored for an intra-floor topology edge.
 
 ## My Role
 
-This was conducted as an Independent Study. I independently designed the system architecture, implemented the Python and Unity delivery pipeline, formulated the optimization model, developed the separate PARS recovery environment, designed the simulation experiments, and prepared the manuscript.
+Role: Independent Study researcher. Responsibilities included problem definition, system architecture, optimization formulation, Python and Unity implementation, simulation experiment design, analysis, and manuscript preparation.
 
-## Repository
+Theta*, Dijkstra search, Pure Pursuit, SAC, CBC/OR-Tools, Gymnasium, and LiDAR occupancy-mapping methods are established building blocks. The project work covered their configuration and integration through the delivery formulation, topology, module interfaces, and recovery logic.
 
-- `src/` — selected Python and Unity C# research implementation.
-- `docs/` — reader-facing source-selection notes and the code pipeline map.
-- `figures/` — selected research diagrams and qualitative planning output.
-- `configs/` — repository-relative example path conventions.
+## Repository Structure
 
-This is a compact method-inspection release, not a complete runnable archive. Maps, task inputs, the Unity project, trained models, and generated experiment artifacts are not included.
+- `src/python/`: mapping, topology, planning, optimization, waypoint generation, and the PARS environment/evaluator.
+- `src/unity/`: sensing, semantic nodes, navigation, robot control, elevator interaction, and delivery targets.
+- `docs/` and `figures/`: [code pipeline](docs/CODE_PIPELINE.md), source-selection notes, architecture diagrams, planning outputs, training results, and [figure provenance](docs/FIGURE_PROVENANCE.md).
 
-No open-source license is granted for this release.
-
-## Code Overview
-
-The Python planning code handles LiDAR packet ingestion and occupancy mapping, multi-floor topology construction, Theta* planning, task-distance generation, multi-trip CVRP optimization, and waypoint expansion. Unity C# handles simulated sensing, semantic scene nodes, randomized delivery targets, route loading, Rigidbody-based Pure Pursuit execution, elevator interaction, and wait commands. These components have explicit file and UDP interfaces: Unity sends LiDAR and pose packets and exports scene nodes, while Python generates a waypoint stream for Unity to load. The separate Python PARS environment contains local recovery, PP/PARS switching, and locked-rejoin logic; no live SAC-to-Unity control bridge was located in the reviewed source. Full Unity scenes, prefabs, models, textures, and package caches are not distributed because this repository is a research-code portfolio rather than a complete scene release. Exact historical dependency versions were not preserved. See the [Code Pipeline](docs/CODE_PIPELINE.md) for the file-level mapping.
-
-## Limitations
-
-- Evaluation is simulation-only; no physical-robot or sim-to-real validation is included.
-- The current architecture and study evaluate a single robot.
-- The public reproducibility package is incomplete and does not support end-to-end reproduction.
+This portfolio focuses on research design, selected implementation modules, and simulation results. It is a curated research portfolio rather than a packaged Unity application, and the reported evaluation is simulation-based.
 
 ## Contact
 
