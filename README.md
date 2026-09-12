@@ -36,6 +36,8 @@ The topology bridges scene geometry and task-level optimization. Instead of sche
 
 The presentation schematic organizes the unloading point, three delivery targets, ramp endpoints, and elevator point across stacked levels. It illustrates how operational locations and vertical transitions are represented; the visible links are schematic rather than a complete adjacency graph.
 
+![Selected semantic nodes and representative inter-floor connections](figures/system_topology_connections.png)
+
 **Edges carry both cost and executable geometry.** Fixed edges store three-dimensional waypoint sequences for known corridors and ramps. Theta* generates selected intra-floor connections on occupancy maps after obstacle inflation. Elevator transfer edges connect boarding and exit nodes.
 
 Dijkstra search over the merged edge cache produces task-to-task distances. After scheduling, the chosen task sequence is expanded through that same cache into physical waypoint paths. This translation—from semantic tasks to geometric routes—is the central role of the topology system.
@@ -56,6 +58,12 @@ Unity serves as the execution environment for the planned trips. The C# modules 
 
 Python supplies the complementary planning stages: occupancy mapping, topology processing, Theta* paths, graph distances, CVRP scheduling, and waypoint generation. The final flat waypoint stream returns to Unity as an ordered sequence of motion and dwell commands. In the manuscript evaluation, five runs of 20 deliveries produced 100/100 completed deliveries and a mean round-trip time of 223 seconds.
 
+## Representative Planning Output
+
+![Theta-star path from Platform_Ramp2_Top to Region_A_Floor1](figures/theta_star_path.png)
+
+This project-generated example shows a Theta* path from `Platform_Ramp2_Top` to `Region_A_Floor1`, with original and snapped endpoints. It illustrates how occupancy thresholding, obstacle inflation, endpoint snapping, and any-angle search produce the sparse waypoint geometry stored for an intra-floor topology edge.
+
 ## Reinforcement Learning for Local Recovery: PARS
 
 **PARS — Path-Attentive Recovery SAC — studies recovery around a supplied reference route in a Python simulation.** Pure Pursuit provides nominal tracking. When a geometric line-of-sight check detects a blocked forward reference, SAC supplies local linear and angular velocity commands. When reconnection becomes feasible, a forward rejoin target is locked before nominal tracking resumes.
@@ -71,12 +79,6 @@ Training success rises while collision and timeout rates decline, with performan
 ![Two representative PARS avoidance and route-rejoin trajectories](figures/pars_recovery_trajectories.png)
 
 The two representative trajectories show PARS steering around local obstacles and returning to the dashed reference route at a locked rejoin point. They visualize the recovery-and-reconnection behavior used alongside nominal Pure Pursuit tracking.
-
-## Representative Planning Output
-
-![Theta-star path from Platform_Ramp2_Top to Region_A_Floor1](figures/theta_star_path.png)
-
-This project-generated example shows a Theta* path from `Platform_Ramp2_Top` to `Region_A_Floor1`, with original and snapped endpoints. It illustrates how occupancy thresholding, obstacle inflation, endpoint snapping, and any-angle search produce the sparse waypoint geometry stored for an intra-floor topology edge.
 
 ## My Role
 
