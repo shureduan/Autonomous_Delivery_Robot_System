@@ -90,7 +90,8 @@ Theta*, Dijkstra search, Pure Pursuit, SAC, CBC/OR-Tools, Gymnasium, and LiDAR o
 
 - `src/python/`: mapping, topology, planning, optimization, waypoint generation, and the PARS environment/evaluator.
 - `src/unity/`: sensing, semantic nodes, navigation, robot control, elevator interaction, and delivery targets.
-- `docs/` and `figures/`: [code pipeline](docs/CODE_PIPELINE.md), source-selection notes, architecture diagrams, planning outputs, training results, and [figure provenance](docs/FIGURE_PROVENANCE.md).
+- `docs/`: [research manuscript](docs/Autonomous_Delivery_Robot_System.pdf).
+- `figures/`: architecture diagrams, planning outputs, and PARS training and recovery results used on this page.
 
 This portfolio focuses on research design, selected implementation modules, and simulation results. It is a curated research portfolio rather than a packaged Unity application, and the reported evaluation is simulation-based.
 
