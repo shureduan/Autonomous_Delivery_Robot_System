@@ -46,6 +46,16 @@ Dijkstra search over the merged edge cache produces task-to-task distances. Afte
 
 A single robot makes repeated depot-return trips while carrying multiple goods. The mixed-integer formulation includes trip-indexed route and activity variables, explicit customer unloading quantities, commodity flows, demand fulfillment, capacity constraints, and subtour elimination. These constraints tie the delivery quantities to the routes used to transport them.
 
+**Explicit trip-count bounds keep the search tractable.** A multi-trip formulation lets the robot leave the depot an arbitrary number of times, so the trip index is bounded on both sides before the solve. The lower bound is the load-limited minimum number of depot departures; the upper bound leaves room for fragmented cross-floor deliveries:
+
+```math
+K_{\min} = \left\lceil \frac{\sum_{c,g} D_{c,g}}{Q} \right\rceil,
+\qquad
+K_{\max} = K_{\min} + 2\,|C|
+```
+
+Here $D_{c,g}$ is the demand of customer $c$ for good $g$, $Q$ is vehicle capacity, and $|C|$ is the number of customers. Together with the explicit unloading variables and multi-commodity flow conservation, this bound tightens the feasible region: no trip index exists that cannot carry load, and physically inconsistent solutions—goods delivered without a corresponding depot loading event—are removed. CBC reaches proven optimal solutions for the current four-node instance in under one second.
+
 CBC, accessed through OR-Tools, minimizes total travel distance. The project applies a construction-delivery formulation and connects its output to the navigation pipeline; CVRP and the solver are established methods. The optimized trips are expanded into ordered movement commands and timed waits for elevator use and unloading.
 
 ## Unity Simulation and Delivery Execution
@@ -94,6 +104,16 @@ Theta*, Dijkstra search, Pure Pursuit, SAC, CBC/OR-Tools, Gymnasium, and LiDAR o
 - `figures/`: architecture diagrams, planning outputs, and PARS training and recovery results used on this page.
 
 This portfolio focuses on research design, selected implementation modules, and simulation results. It is a curated research portfolio rather than a packaged Unity application, and the reported evaluation is simulation-based.
+
+## Project report
+
+This work was completed as an Independent Study at the Department of Civil and Environmental Engineering, Carnegie Mellon University, advised by Prof. Pingbo Tang.
+
+The archived manuscript is:
+
+> *A Multi-Level Autonomous Delivery Robot System in Unity for Construction-Site Material Transportation*
+
+[Read the research manuscript (PDF)](docs/Autonomous_Delivery_Robot_System.pdf). The repository preserves the manuscript without presenting it as a published paper.
 
 ## Contact
 
