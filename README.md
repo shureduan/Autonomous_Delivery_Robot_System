@@ -90,12 +90,6 @@ Training success rises while collision and timeout rates decline, with performan
 
 The two representative trajectories show PARS steering around local obstacles and returning to the dashed reference route at a locked rejoin point. They visualize the recovery-and-reconnection behavior used alongside nominal Pure Pursuit tracking.
 
-## My Role
-
-Role: Independent Study researcher. Responsibilities included problem definition, system architecture, optimization formulation, Python and Unity implementation, simulation experiment design, analysis, and manuscript preparation.
-
-Theta*, Dijkstra search, Pure Pursuit, SAC, CBC/OR-Tools, Gymnasium, and LiDAR occupancy-mapping methods are established building blocks. The project work covered their configuration and integration through the delivery formulation, topology, module interfaces, and recovery logic.
-
 ## Repository Structure
 
 - `src/python/`: mapping, topology, planning, optimization, waypoint generation, and the PARS environment/evaluator.
@@ -119,4 +113,4 @@ The archived manuscript is:
 
 Jingxuan Duan<br>
 Carnegie Mellon University<br>
-Email: shureduan0912@gmail.com
+Email: jingxuad@andrew.cmu.edu
